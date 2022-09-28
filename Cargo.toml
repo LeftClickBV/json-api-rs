@@ -11,6 +11,7 @@ name = "json-api"
 readme = "README.md"
 repository = "https://github.com/zacharygolba/json-api-rs"
 version = "0.4.1"
+edition = "2021"
 
 [badges.appveyor]
 repository = "zacharygolba/json-api-rs"
@@ -22,17 +23,13 @@ repository = "zacharygolba/json-api-rs"
 repository = "zacharygolba/json-api-rs"
 
 [dependencies]
-error-chain = "0.11"
-http = "0.1"
-percent-encoding = "1.0"
-serde = "1.0"
-serde_derive = "1.0"
-serde_json = "1.0"
-serde_qs = "0.3"
-
-[dependencies.ordermap]
-features = ["serde-1"]
-version = "0.3"
+error-chain = "0.12.4"
+http = "0.2.8"
+indexmap = { version = "1.9.1", features = ["serde-1"] }
+percent-encoding = "2.2.0"
+serde = { version = "1.0.145", features = ["derive"] }
+serde_json = "1.0.85"
+serde_qs = "0.10.1"
 
 [workspace]
 members = ["rocket"]

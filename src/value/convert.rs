@@ -1,11 +1,9 @@
 //! Functions that convert types to and from a `Value`.
 
-use serde::de::DeserializeOwned;
-use serde::ser::Serialize;
+use serde::{de::DeserializeOwned, ser::Serialize};
 use serde_json::{self, Value as JsonValue};
 
-use error::Error;
-use value::Value;
+use crate::{error::Error, value::Value};
 
 /// Convert a `T` into a `Value`.
 pub fn to_value<T>(value: T) -> Result<Value, Error>
@@ -47,7 +45,8 @@ pub(crate) fn from_json(value: JsonValue) -> Result<Value, Error> {
         JsonValue::Array(data) => data.into_iter().map(from_json).collect(),
         JsonValue::Bool(data) => Ok(Value::Bool(data)),
         JsonValue::Number(data) => Ok(Value::Number(data)),
-        JsonValue::Object(data) => data.into_iter()
+        JsonValue::Object(data) => data
+            .into_iter()
             .map(|(k, v)| Ok((k.parse()?, from_json(v)?)))
             .collect(),
         JsonValue::String(data) => Ok(Value::String(data)),

@@ -1,16 +1,18 @@
-use std::borrow::Borrow;
-use std::fmt::{self, Display, Formatter};
-use std::iter::{Extend, FromIterator};
-use std::ops::Deref;
-use std::slice::Iter;
-use std::str::FromStr;
+use std::{
+    borrow::Borrow,
+    fmt::{self, Display, Formatter},
+    iter::{Extend, FromIterator},
+    ops::Deref,
+    slice::Iter,
+    str::FromStr,
+};
 
-use serde::de::{Deserialize, Deserializer};
-use serde::ser::{Serialize, Serializer};
+use serde::{
+    de::{Deserialize, Deserializer},
+    ser::{Serialize, Serializer},
+};
 
-use error::Error;
-use sealed::Sealed;
-use value::Key;
+use crate::{error::Error, sealed::Sealed, value::Key};
 
 /// Represents a dot-separated list of member names.
 ///
@@ -367,7 +369,7 @@ impl<'a> PartialEq<&'a str> for Path {
 
 impl PartialEq<String> for Path {
     fn eq(&self, rhs: &String) -> bool {
-        self == &*rhs
+        self == rhs
     }
 }
 

@@ -6,19 +6,31 @@ mod sort;
 
 use std::fmt::{self, Formatter};
 
-use percent_encoding::percent_decode;
-use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
-use serde::ser::{Serialize, SerializeStruct, Serializer};
+use percent_encoding::{percent_decode, percent_encode, AsciiSet, CONTROLS};
+use serde::{
+    de::{Deserializer, MapAccess, Visitor},
+    ser::{Serialize, SerializeStruct, Serializer},
+    Deserialize,
+};
 use serde_qs;
 
-use error::Error;
-use value::{Key, Map, Path, Set, Value};
+use crate::{
+    error::Error,
+    value::{Key, Map, Path, Set, Value},
+};
 
-pub use self::builder::Builder;
-pub use self::page::Page;
-pub use self::sort::{Direction, Sort};
+pub use self::{
+    builder::Builder,
+    page::Page,
+    sort::{Direction, Sort},
+};
+
+/// The ASCII set to percent encode for query strings.
+/// https://url.spec.whatwg.org/#query-state
+const QUERY: &AsciiSet = &CONTROLS.add(b' ').add(b'"').add(b'#').add(b'<').add(b'>');
 
 /// Represents well-known query parameters.
+#[non_exhaustive]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Query {
     /// A map where each key is a type name and the value is set of field names
@@ -41,7 +53,7 @@ pub struct Query {
     /// A map where each key is a field path and the value is the value the client
     /// would like each item in the return document to have for the given field.
     ///
-    /// For more information, check out the *[filter]* section of the JSON API
+    /// For more information, check out the *[filtering]* section of the JSON API
     /// specification.
     ///
     /// [filtering]: http://jsonapi.org/format/#fetching-filtering
@@ -77,9 +89,6 @@ pub struct Query {
     ///
     /// [sorting]: http://jsonapi.org/format/#fetching-sorting
     pub sort: Set<Sort>,
-
-    /// Private field for backwards compatibility.
-    _ext: (),
 }
 
 impl Query {
@@ -169,7 +178,6 @@ impl<'de> Deserialize<'de> for Query {
                     filter: filter.unwrap_or_default(),
                     include: include.unwrap_or_default(),
                     sort: sort.unwrap_or_default(),
-                    _ext: (),
                 })
             }
         }
@@ -228,12 +236,10 @@ pub fn from_str(data: &str) -> Result<Query, Error> {
 
 /// Serialize the given `Query` as a percent encoded query string.
 pub fn to_string(query: &Query) -> Result<String, Error> {
-    use percent_encoding::{percent_encode, QUERY_ENCODE_SET};
-
     let value = serde_qs::to_string(query)?;
     let data = value.as_bytes();
 
-    Ok(percent_encode(data, QUERY_ENCODE_SET).collect())
+    Ok(percent_encode(data, QUERY).collect())
 }
 
 /// Serialize the given `Query` as a representing percent encoded query string

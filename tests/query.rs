@@ -1,29 +1,27 @@
-extern crate json_api;
-#[macro_use]
-extern crate ordermap;
+use indexmap::{indexmap, IndexMap};
+use json_api::{
+    query::{self, Direction, Query},
+    Error,
+};
 
-use json_api::Error;
-use json_api::query::{self, Direction, Query};
-use ordermap::OrderMap;
-
-type Mapping = OrderMap<&'static str, Query>;
+type Mapping = IndexMap<&'static str, Query>;
 
 fn from_mapping() -> Result<Mapping, Error> {
-    Ok(ordermap!{
+    Ok(indexmap! {
         "" => Default::default(),
-        "fields%5Barticles%5D=title" => Query::builder()
+        "fields[articles]=title" => Query::builder()
             .fields("articles", vec!["title"])
             .build()?,
         concat!(
-            "fields%5Barticles%5D=body%2Ctitle%2Cpublished-at&",
-            "fields%5Bcomments%5D=body&",
-            "fields%5Busers%5D=name",
+            "fields[articles]=body%2Ctitle%2Cpublished-at&",
+            "fields[comments]=body&",
+            "fields[users]=name",
         ) => Query::builder()
             .fields("articles", vec!["body", "title", "published-at"])
             .fields("comments", vec!["body"])
             .fields("users", vec!["name"])
             .build()?,
-        "filter%5Busers.name%5D=Alfred+Pennyworth" => Query::builder()
+        "filter[users.name]=Alfred+Pennyworth" => Query::builder()
             .filter("users.name", "Alfred Pennyworth")
             .build()?,
         "include=author" => Query::builder()
@@ -34,16 +32,16 @@ fn from_mapping() -> Result<Mapping, Error> {
             .include("comments")
             .include("comments.author")
             .build()?,
-        "page%5Bnumber%5D=0" => Query::builder()
+        "page[number]=0" => Query::builder()
             .page(1, None)
             .build()?,
-        "page%5Bnumber%5D=1" => Query::builder()
+        "page[number]=1" => Query::builder()
             .page(1, None)
             .build()?,
-        "page%5Bsize%5D=10" => Query::builder()
+        "page[size]=10" => Query::builder()
             .page(1, Some(10))
             .build()?,
-        "page%5Bnumber%5D=2&page%5Bsize%5D=15" => Query::builder()
+        "page[number]=2&page[size]=15" => Query::builder()
             .page(2, Some(15))
             .build()?,
         "sort=-published-at" => Query::builder()
@@ -59,12 +57,12 @@ fn from_mapping() -> Result<Mapping, Error> {
             .sort("author.name", Direction::Desc)
             .build()?,
         concat!(
-            "fields%5Barticles%5D=body%2Ctitle%2Cpublished-at&",
-            "fields%5Bcomments%5D=body&",
-            "fields%5Busers%5D=name&",
-            "filter%5Busers.name%5D=Alfred+Pennyworth&",
+            "fields[articles]=body%2Ctitle%2Cpublished-at&",
+            "fields[comments]=body&",
+            "fields[users]=name&",
+            "filter[users.name]=Alfred+Pennyworth&",
             "include=author%2Ccomments%2Ccomments.author&",
-            "page%5Bnumber%5D=2&page%5Bsize%5D=15&",
+            "page[number]=2&page[size]=15&",
             "sort=published-at%2C-title%2C-author.name",
         ) => Query::builder()
             .fields("articles", vec!["body", "title", "published-at"])
@@ -86,7 +84,7 @@ fn to_mapping() -> Result<Mapping, Error> {
     let mapping = from_mapping()?
         .into_iter()
         .map(|(key, value)| match key {
-            "page%5Bnumber%5D=0" | "page%5Bnumber%5D=1" => ("", value),
+            "page[number]=0" | "page[number]=1" => ("", value),
             _ => (key, value),
         })
         .collect();

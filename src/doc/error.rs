@@ -1,6 +1,10 @@
-use doc::Link;
 use http::StatusCode;
-use value::{Key, Map};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    doc::Link,
+    value::{Key, Map},
+};
 
 /// Contains information about problems encountered while performing an
 /// operation.
@@ -9,6 +13,7 @@ use value::{Key, Map};
 /// specification.
 ///
 /// [error objects]: http://jsonapi.org/format/#error-objects
+#[non_exhaustive]
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct ErrorObject {
     /// An application-specific error code, expressed as a string value.
@@ -50,10 +55,6 @@ pub struct ErrorObject {
     /// A short, human-readable summary of the problem.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl ErrorObject {
@@ -72,6 +73,7 @@ impl ErrorObject {
 }
 
 /// References to the source of the error.
+#[non_exhaustive]
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ErrorSource {
     /// A string indicating which query parameter caused the error.
@@ -81,21 +83,13 @@ pub struct ErrorSource {
     /// A JSON pointer to the associated entity in the request document.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pointer: Option<String>,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl ErrorSource {
     /// Returns a new `ErrorSource` with the specified `parameter` and
     /// `pointer` values.
     pub fn new(parameter: Option<String>, pointer: Option<String>) -> Self {
-        ErrorSource {
-            parameter,
-            pointer,
-            _ext: (),
-        }
+        ErrorSource { parameter, pointer }
     }
 }
 

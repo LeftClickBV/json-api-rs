@@ -1,9 +1,13 @@
 use std::fmt::{self, Formatter};
 
-use serde::de::{Deserialize, Deserializer};
-use serde::ser::{Serialize, SerializeStruct, Serializer};
+use serde::{
+    de::Deserializer,
+    ser::{Serialize, SerializeStruct, Serializer},
+    Deserialize,
+};
 
 /// Limit and offset based pagination parameters.
+#[non_exhaustive]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Page {
     /// The page number. This value is checked to be non-zero when a page is created via
@@ -13,9 +17,6 @@ pub struct Page {
 
     /// Optionally specifies the maximum number of items to include per page.
     pub size: Option<u64>,
-
-    /// Private field for backwards compatibility.
-    _ext: (),
 }
 
 impl Page {
@@ -34,11 +35,7 @@ impl Page {
     pub fn new(number: u64, size: Option<u64>) -> Self {
         let number = if number > 0 { number } else { 1 };
 
-        Page {
-            number,
-            size,
-            _ext: (),
-        }
+        Page { number, size }
     }
 }
 

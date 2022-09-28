@@ -3,7 +3,6 @@
 pub mod map;
 pub mod set;
 
-pub use ordermap::Equivalent;
+pub use indexmap::Equivalent;
 
-pub use self::map::Map;
-pub use self::set::Set;
+pub use self::{map::Map, set::Set};

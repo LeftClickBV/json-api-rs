@@ -1,11 +1,15 @@
-use std::fmt::{self, Display, Formatter};
-use std::str::FromStr;
+use std::{
+    fmt::{self, Display, Formatter},
+    str::FromStr,
+};
 
-use serde::de::{Deserialize, Deserializer, Error as DeError};
-use serde::ser::{Serialize, Serializer};
+use serde::{
+    de::{Deserializer, Error as DeError},
+    ser::Serializer,
+    Deserialize, Serialize,
+};
 
-use error::Error;
-use value::Map;
+use crate::{error::Error, value::Map};
 
 /// Information about this implementation of the specification.
 ///
@@ -13,6 +17,7 @@ use value::Map;
 /// specification.
 ///
 /// [JSON API object]: https://goo.gl/hZUcEt
+#[non_exhaustive]
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct JsonApi {
     /// Non-standard meta information. If this value of this field is empty, it will not
@@ -26,10 +31,6 @@ pub struct JsonApi {
     /// The latest version of the JSON API specification that is supported by
     /// this implementation. Defaults to the latest available version.
     pub version: Version,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl JsonApi {
@@ -49,7 +50,6 @@ impl JsonApi {
         JsonApi {
             version,
             meta: Default::default(),
-            _ext: (),
         }
     }
 }

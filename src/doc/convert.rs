@@ -3,11 +3,13 @@ use std::io::{Read, Write};
 use serde::de::DeserializeOwned;
 use serde_json;
 
-use doc::{Data, Document, PrimaryData};
-use error::Error;
-use query::Query;
-use value::{self, Value};
-use view::Render;
+use crate::{
+    doc::{Data, Document, PrimaryData},
+    error::Error,
+    query::Query,
+    value::{self, Value},
+    view::Render,
+};
 
 /// Interpret a `Document<T>` as a type `U`.
 pub fn from_doc<T, U>(doc: Document<T>) -> Result<U, Error>
@@ -22,7 +24,8 @@ where
                     Some(item) => item.flatten(&included),
                     None => Value::Null,
                 },
-                Data::Collection(data) => data.into_iter()
+                Data::Collection(data) => data
+                    .into_iter()
                     .map(|item| item.flatten(&included))
                     .collect(),
             });

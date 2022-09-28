@@ -12,6 +12,7 @@ name = "json-api-rocket"
 readme = "README.md"
 repository = "https://github.com/zacharygolba/json-api-rs"
 version = "0.4.1"
+edition = "2021"
 
 [badges.appveyor]
 repository = "zacharygolba/json-api-rs"
@@ -23,11 +24,10 @@ repository = "zacharygolba/json-api-rs"
 repository = "zacharygolba/json-api-rs"
 
 [dependencies]
-lazy_static = "0.2.11"
-rocket = "0.3"
-rocket_contrib = "0.3"
-serde = "1.0"
-serde_json = "1.0"
+#lazy_static = "1.4.0"
+rocket = "0.5.0-rc.2"
+serde = "1.0.145"
+serde_json = "1.0.85"
 
 [dependencies.json-api]
 path = "../"

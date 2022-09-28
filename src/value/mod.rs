@@ -5,15 +5,19 @@ pub(crate) mod convert;
 pub mod collections;
 pub mod fields;
 
-use std::cmp::PartialEq;
-use std::fmt::{self, Formatter};
-use std::iter::FromIterator;
-use std::str::FromStr;
+use std::{
+    cmp::PartialEq,
+    fmt::{self, Formatter},
+    iter::FromIterator,
+    str::FromStr,
+};
 
-use serde::de::{Deserialize, Deserializer, Visitor};
-use serde::ser::{Serialize, Serializer};
+use serde::{
+    de::{Deserialize, Deserializer, Visitor},
+    ser::{Serialize, Serializer},
+};
 
-use error::Error;
+use crate::error::Error;
 
 pub use serde_json::value::Number;
 
@@ -333,10 +337,7 @@ impl Value {
     /// [`as_array`]: #method.as_array
     /// [`as_array_mut`]: #method.as_array_mut
     pub fn is_array(&self) -> bool {
-        match *self {
-            Value::Array(_) => true,
-            _ => false,
-        }
+        matches!(*self, Value::Array(_))
     }
 
     /// Returns true if the `Value` is a boolean.
@@ -361,10 +362,7 @@ impl Value {
     ///
     /// [`as_bool`]: #method.as_bool
     pub fn is_boolean(&self) -> bool {
-        match *self {
-            Value::Bool(_) => true,
-            _ => false,
-        }
+        matches!(*self, Value::Bool(_))
     }
 
     /// Returns true if the `Value` is null.
@@ -389,10 +387,7 @@ impl Value {
     ///
     /// [`as_null`]: #method.as_null
     pub fn is_null(&self) -> bool {
-        match *self {
-            Value::Null => true,
-            _ => false,
-        }
+        matches!(*self, Value::Null)
     }
 
     /// Returns true if the `Value` is a number.
@@ -409,10 +404,7 @@ impl Value {
     /// # }
     /// ```
     pub fn is_number(&self) -> bool {
-        match *self {
-            Value::Number(_) => true,
-            _ => false,
-        }
+        matches!(*self, Value::Number(_))
     }
 
     /// Returns true if the `Value` is an object.
@@ -441,10 +433,7 @@ impl Value {
     /// [`as_object`]: #method.as_object
     /// [`as_object_mut`]: #method.as_object_mut
     pub fn is_object(&self) -> bool {
-        match *self {
-            Value::Object(_) => true,
-            _ => false,
-        }
+        matches!(*self, Value::Object(_))
     }
 
     /// Returns true if the `Value` is a string.
@@ -469,10 +458,7 @@ impl Value {
     ///
     /// [`as_str`]: #method.as_str
     pub fn is_string(&self) -> bool {
-        match *self {
-            Value::String(_) => true,
-            _ => false,
-        }
+        matches!(*self, Value::String(_))
     }
 
     /// Returns true if the `Value` is a number that can be represented as an

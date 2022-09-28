@@ -1,7 +1,11 @@
-use doc::Object;
-use query::Query;
-use value::Set;
-use value::fields::{Key, Path, Segment};
+use crate::{
+    doc::Object,
+    query::Query,
+    value::{
+        fields::{Key, Path, Segment},
+        Set,
+    },
+};
 
 /// A data structure containing render context that can be "forked" and passed
 /// to a child context.

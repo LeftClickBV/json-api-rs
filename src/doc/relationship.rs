@@ -1,7 +1,11 @@
 use std::iter::FromIterator;
 
-use doc::{Data, Identifier, Link};
-use value::{Key, Map};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    doc::{Data, Identifier, Link},
+    value::{Key, Map},
+};
 
 /// Represents a resource's relationship to another.
 ///
@@ -9,6 +13,7 @@ use value::{Key, Map};
 /// specification.
 ///
 /// [relationships]: https://goo.gl/ZQw9Xr
+#[non_exhaustive]
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Relationship {
     /// Contains resource linkage. For more information, checkout the
@@ -32,10 +37,6 @@ pub struct Relationship {
     /// [meta information]: https://goo.gl/LyrGF8
     #[serde(default, skip_serializing_if = "Map::is_empty")]
     pub meta: Map,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl Relationship {
@@ -66,7 +67,6 @@ impl Relationship {
             data,
             links: Default::default(),
             meta: Default::default(),
-            _ext: (),
         }
     }
 }

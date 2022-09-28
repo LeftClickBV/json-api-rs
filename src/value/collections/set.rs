@@ -1,20 +1,30 @@
 //! A hash set implemented as a `Map` where the value is `()`.
 
-use std::fmt::{self, Debug, Display, Formatter, Write};
-use std::hash::Hash;
-use std::iter::FromIterator;
-use std::marker::PhantomData;
-use std::ops::RangeFull;
-use std::str::FromStr;
+use std::{
+    fmt::{self, Debug, Display, Formatter, Write},
+    hash::Hash,
+    iter::FromIterator,
+    marker::PhantomData,
+    ops::RangeFull,
+    str::FromStr,
+};
 
-use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
-use serde::ser::{Serialize, SerializeSeq, Serializer};
+use serde::{
+    de::{Deserialize, Deserializer, SeqAccess, Visitor},
+    ser::{Serialize, SerializeSeq, Serializer},
+};
 
-use error::Error;
-use sealed::Sealed;
-use value::Key;
-use value::collections::Equivalent;
-use value::collections::map::{self, Keys, Map};
+use crate::{
+    error::Error,
+    sealed::Sealed,
+    value::{
+        collections::{
+            map::{self, Keys, Map},
+            Equivalent,
+        },
+        Key,
+    },
+};
 
 /// A hash set implemented as a `Map` where the value is `()`.
 #[derive(Clone, Eq, PartialEq)]

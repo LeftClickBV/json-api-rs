@@ -2,15 +2,25 @@ use std::ops::{Deref, DerefMut};
 
 use serde::de::DeserializeOwned;
 
-use json_api::doc::{NewObject, Object};
-use json_api::query::{self, Page, Query as JsonApiQuery, Sort};
-use json_api::value::collections::{map, set, Set};
-use json_api::value::{Key, Path, Value};
-use json_api::{self, Error};
-use rocket::data::{self, Data, FromData};
-use rocket::http::Status;
-use rocket::outcome::Outcome;
-use rocket::request::{self, FromRequest, Request};
+use json_api::{
+    self,
+    doc::{NewObject, Object},
+    query::{Page, Query as JsonApiQuery, Sort},
+    value::{
+        collections::{map, set, Set},
+        Key, Path, Value,
+    },
+    Error,
+};
+use rocket::{
+    data::{self, ByteUnit, Data, FromData},
+    http::Status,
+    outcome::Outcome,
+    request::{self, FromRequest, Request},
+};
+
+// FIXME: Is this a good  limit?
+const DATA_LIMIT: ByteUnit = ByteUnit::Mebibyte(10);
 
 #[derive(Debug)]
 pub struct Create<T: DeserializeOwned>(pub T);
@@ -36,13 +46,18 @@ impl<T: DeserializeOwned> DerefMut for Create<T> {
     }
 }
 
-impl<T: DeserializeOwned> FromData for Create<T> {
+#[rocket::async_trait]
+impl<'r, T: DeserializeOwned> FromData<'r> for Create<T> {
     type Error = Error;
 
-    fn from_data(_: &Request, data: Data) -> data::Outcome<Self, Self::Error> {
-        let reader = data.open();
+    async fn from_data(_: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
+        let string = match data.open(DATA_LIMIT).into_string().await {
+            Ok(string) if string.is_complete() => string.into_inner(),
+            Ok(_) => return fail(Error::payload_too_large(DATA_LIMIT.as_u64())),
+            Err(e) => return fail(e.into()),
+        };
 
-        match json_api::from_reader::<_, NewObject, _>(reader) {
+        match json_api::from_str::<NewObject, _>(&string) {
             Ok(value) => Outcome::Success(Create(value)),
             Err(e) => fail(e),
         }
@@ -73,13 +88,18 @@ impl<T: DeserializeOwned> DerefMut for Update<T> {
     }
 }
 
-impl<T: DeserializeOwned> FromData for Update<T> {
+#[rocket::async_trait]
+impl<'r, T: DeserializeOwned> FromData<'r> for Update<T> {
     type Error = Error;
 
-    fn from_data(_: &Request, data: Data) -> data::Outcome<Self, Self::Error> {
-        let reader = data.open();
+    async fn from_data(_: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
+        let string = match data.open(DATA_LIMIT).into_string().await {
+            Ok(string) if string.is_complete() => string.into_inner(),
+            Ok(_) => return fail(Error::payload_too_large(DATA_LIMIT.as_u64())),
+            Err(e) => return fail(e.into()),
+        };
 
-        match json_api::from_reader::<_, Object, _>(reader) {
+        match json_api::from_str::<Object, _>(&string) {
             Ok(value) => Outcome::Success(Update(value)),
             Err(e) => fail(e),
         }
@@ -134,11 +154,15 @@ impl DerefMut for Query {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for Query {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Query {
     type Error = Error;
 
-    fn from_request(req: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
-        match req.uri().query().map(query::from_str) {
+    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        // FIXME: It may not be necessary to go from `rocket::http::ury::Query` to `JsonApiQuery`
+        // via `&str`
+        let request_query = req.uri().query();
+        match request_query.map(|query| json_api::query::from_str(query.as_str())) {
             Some(Ok(inner)) => Outcome::Success(Query { inner }),
             Some(Err(e)) => fail(e),
             None => Outcome::Success(Default::default()),
@@ -147,11 +171,11 @@ impl<'a, 'r> FromRequest<'a, 'r> for Query {
 }
 
 fn fail<T, F>(e: Error) -> Outcome<T, (Status, Error), F> {
-    use config::ROCKET_ENV;
-
-    if !ROCKET_ENV.is_prod() {
-        eprintln!("{:?}", e);
-    }
+    // use config::ROCKET_ENV;
+    //
+    // if !ROCKET_ENV.is_prod() {
+    //     eprintln!("{:?}", e);
+    // }
 
     Outcome::Failure((Status::BadRequest, e))
 }

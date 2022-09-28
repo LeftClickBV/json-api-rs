@@ -1,15 +1,19 @@
-use std::cmp::{Eq, PartialEq};
-use std::fmt::{self, Display, Formatter};
-use std::hash::{Hash, Hasher};
-use std::ops::Deref;
-use std::str::FromStr;
+use std::{
+    cmp::{Eq, PartialEq},
+    fmt::{self, Display, Formatter},
+    hash::{Hash, Hasher},
+    ops::Deref,
+    str::FromStr,
+};
 
 use http::Uri;
-use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
-use serde::ser::{Serialize, SerializeStruct, Serializer};
+use serde::{
+    de::{self, Deserializer, MapAccess, Visitor},
+    ser::{Serialize, SerializeStruct, Serializer},
+    Deserialize,
+};
 
-use error::Error;
-use value::Map;
+use crate::{error::Error, value::Map};
 
 /// A data structure containing a URL. Can be deserialized from either a string or link
 /// object.
@@ -35,6 +39,7 @@ use value::Map;
 /// ```
 ///
 /// [links]: https://goo.gl/E4E6Vt
+#[non_exhaustive]
 #[derive(Clone, Debug, Default)]
 pub struct Link {
     /// The link’s URI.
@@ -47,9 +52,6 @@ pub struct Link {
     ///
     /// [meta information]: https://goo.gl/LyrGF8
     pub meta: Map,
-
-    /// Private field for backwards compatibility.
-    _ext: (),
 }
 
 impl Deref for Link {
@@ -75,7 +77,6 @@ impl FromStr for Link {
         Ok(Link {
             href: value.parse()?,
             meta: Default::default(),
-            _ext: (),
         })
     }
 }
@@ -166,7 +167,6 @@ impl<'de> Deserialize<'de> for Link {
                 Ok(Link {
                     href: href.ok_or_else(|| de::Error::missing_field("href"))?,
                     meta: meta.unwrap_or_default(),
-                    _ext: (),
                 })
             }
         }

@@ -1,15 +1,18 @@
-use std::fmt::{self, Display, Formatter, Write};
-use std::ops::Neg;
-use std::str::FromStr;
+use std::{
+    fmt::{self, Display, Formatter, Write},
+    ops::Neg,
+    str::FromStr,
+};
 
-use serde::de::{Deserialize, Deserializer};
-use serde::ser::{Serialize, Serializer};
+use serde::{
+    de::{Deserialize, Deserializer},
+    ser::{Serialize, Serializer},
+};
 
-use error::Error;
-use query::Path;
-use sealed::Sealed;
+use crate::{error::Error, query::Path, sealed::Sealed};
 
 /// A single sort instruction containing a direction and field path.
+#[non_exhaustive]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Sort {
     /// The direction to sort by.
@@ -17,19 +20,12 @@ pub struct Sort {
 
     /// The name of the field to sort by.
     pub field: Path,
-
-    /// Private field for backwards compatibility.
-    _ext: (),
 }
 
 impl Sort {
     /// Returns a new `Sort`.
     pub fn new(field: Path, direction: Direction) -> Self {
-        Sort {
-            direction,
-            field,
-            _ext: (),
-        }
+        Sort { direction, field }
     }
 
     /// Returns a cloned inverse of `self`.
@@ -77,8 +73,8 @@ impl FromStr for Sort {
     type Err = Error;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if value.starts_with('-') {
-            let field = (&value[1..]).parse()?;
+        if let Some(value) = value.strip_prefix('-') {
+            let field = value.parse()?;
             Ok(Sort::new(field, Direction::Desc))
         } else {
             let field = value.parse()?;
@@ -225,7 +221,7 @@ impl Neg for Direction {
 #[cfg(test)]
 mod tests {
     use super::{Direction, Sort};
-    use value::Path;
+    use crate::value::Path;
 
     #[test]
     fn direction_is_asc() {

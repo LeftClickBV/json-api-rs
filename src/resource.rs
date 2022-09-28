@@ -1,11 +1,12 @@
 use std::mem;
 
-use doc::{Data, Document, Identifier, Object};
-use error::Error;
-use query::Query;
-use value::Set;
-use value::fields::Key;
-use view::{Context, Render};
+use crate::{
+    doc::{Data, Document, Identifier, Object},
+    error::Error,
+    query::Query,
+    value::{fields::Key, Set},
+    view::{Context, Render},
+};
 
 /// A trait indicating that the given type can be represented as a resource.
 ///
@@ -110,7 +111,7 @@ impl<'a, T: Resource> Render<Identifier> for &'a [T] {
         let mut incl = Set::new();
         let mut ctx = Context::new(T::kind(), query, &mut incl);
 
-        self.into_iter()
+        self.iter()
             .map(|item| item.to_ident(&mut ctx))
             .collect::<Result<Vec<_>, _>>()?
             .render(query)
@@ -123,8 +124,8 @@ impl<'a, T: Resource> Render<Object> for &'a T {
         let (data, links, meta) = {
             let mut ctx = Context::new(T::kind(), query, &mut incl);
             let mut obj = self.to_object(&mut ctx)?;
-            let links = mem::replace(&mut obj.links, Default::default());
-            let meta = mem::replace(&mut obj.meta, Default::default());
+            let links = mem::take(&mut obj.links);
+            let meta = mem::take(&mut obj.meta);
 
             (obj.into(), links, meta)
         };

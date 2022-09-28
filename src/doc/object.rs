@@ -1,13 +1,19 @@
-use std::cmp::{Eq, PartialEq};
-use std::hash::{Hash, Hasher};
-use std::mem;
+use std::{
+    cmp::{Eq, PartialEq},
+    hash::{Hash, Hasher},
+    mem,
+};
 
-use doc::{Data, Document, Identifier, Link, PrimaryData, Relationship};
-use error::Error;
-use query::Query;
-use sealed::Sealed;
-use value::{Key, Map, Set, Value};
-use view::Render;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    doc::{Data, Document, Identifier, Link, PrimaryData, Relationship},
+    error::Error,
+    query::Query,
+    sealed::Sealed,
+    value::{Key, Map, Set, Value},
+    view::Render,
+};
 
 /// A preexisting resource. Commonly found in the document of a response or `PATCH`
 /// request.
@@ -140,6 +146,7 @@ use view::Render;
 /// [`id`]: #structfield.id
 /// [`kind`]: #structfield.kind
 /// [resource objects]: https://goo.gl/55cSP7
+#[non_exhaustive]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Object {
     /// Contains some of the object's data. If this value of this field is empty, it will
@@ -189,10 +196,6 @@ pub struct Object {
     /// [relationships]: https://goo.gl/Gxghwc
     #[serde(default, skip_serializing_if = "Map::is_empty")]
     pub relationships: Map<Key, Relationship>,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl Object {
@@ -223,7 +226,6 @@ impl Object {
             links: Default::default(),
             meta: Default::default(),
             relationships: Default::default(),
-            _ext: (),
         }
     }
 }
@@ -271,8 +273,8 @@ impl Render<Identifier> for Vec<Object> {
 
 impl Render<Object> for Object {
     fn render(mut self, _: Option<&Query>) -> Result<Document<Object>, Error> {
-        let links = mem::replace(&mut self.links, Default::default());
-        let meta = mem::replace(&mut self.meta, Default::default());
+        let links = mem::take(&mut self.links);
+        let meta = mem::take(&mut self.meta);
 
         Ok(Document::Ok {
             links,
@@ -298,7 +300,7 @@ impl Render<Object> for Vec<Object> {
 
 impl PrimaryData for Object {
     fn flatten(self, incl: &Set<Object>) -> Value {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let Object { id, attributes, relationships, .. } = self;
         let mut map = {
             let size = attributes.len() + relationships.len() + 1;
@@ -336,6 +338,7 @@ impl Sealed for Object {}
 /// specification.
 ///
 /// [creating resources]: https://goo.gl/KoLQgh
+#[non_exhaustive]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NewObject {
     /// Contains some of the object's data. If this value of this field is empty, it will
@@ -387,10 +390,6 @@ pub struct NewObject {
     /// [relationships]: https://goo.gl/Gxghwc
     #[serde(default, skip_serializing_if = "Map::is_empty")]
     pub relationships: Map<Key, Relationship>,
-
-    /// Private field for backwards compatibility.
-    #[serde(skip)]
-    _ext: (),
 }
 
 impl NewObject {
@@ -421,14 +420,13 @@ impl NewObject {
             links: Default::default(),
             meta: Default::default(),
             relationships: Default::default(),
-            _ext: (),
         }
     }
 }
 
 impl PrimaryData for NewObject {
     fn flatten(self, _: &Set<Object>) -> Value {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let NewObject { id, attributes, relationships, .. } = self;
         let mut map = {
             let size = attributes.len() + relationships.len() + 1;

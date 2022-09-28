@@ -3,17 +3,20 @@
 //! The types in this module are commonly used as the underlying data structure
 //! of arbitrary objects found in JSON API data.
 
-use std::fmt::{self, Debug, Formatter};
-use std::hash::Hash;
-use std::iter::FromIterator;
-use std::ops::RangeFull;
+use std::{
+    fmt::{self, Debug, Formatter},
+    hash::Hash,
+    iter::FromIterator,
+    ops::RangeFull,
+};
 
-use ordermap::{self, OrderMap};
-use serde::de::{Deserialize, Deserializer};
-use serde::ser::{Serialize, Serializer};
+use indexmap::{self, IndexMap};
+use serde::{
+    de::{Deserialize, Deserializer},
+    ser::{Serialize, Serializer},
+};
 
-use value::collections::Equivalent;
-use value::{Key, Value};
+use crate::value::{collections::Equivalent, Key, Value};
 
 /// A hash map implementation with consistent ordering.
 #[derive(Clone, Eq, PartialEq)]
@@ -21,9 +24,10 @@ pub struct Map<K = Key, V = Value>
 where
     K: Eq + Hash,
 {
-    inner: OrderMap<K, V>,
+    inner: IndexMap<K, V>,
 }
 
+// TODO: Why not use `Deref`?
 impl<K, V> Map<K, V>
 where
     K: Eq + Hash,
@@ -71,7 +75,7 @@ where
     /// # }
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
-        let inner = OrderMap::with_capacity(capacity);
+        let inner = IndexMap::with_capacity(capacity);
         Map { inner }
     }
 
@@ -495,7 +499,7 @@ where
     where
         I: IntoIterator<Item = (K, V)>,
     {
-        let inner = OrderMap::from_iter(iter);
+        let inner = IndexMap::from_iter(iter);
         Map { inner }
     }
 }
@@ -546,7 +550,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        OrderMap::deserialize(deserializer).map(|inner| Map { inner })
+        IndexMap::deserialize(deserializer).map(|inner| Map { inner })
     }
 }
 
@@ -565,7 +569,7 @@ where
 
 /// A draining iterator over the entries of a `Map`.
 pub struct Drain<'a, K: 'a, V: 'a> {
-    iter: ordermap::Drain<'a, K, V>,
+    iter: indexmap::map::Drain<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for Drain<'a, K, V> {
@@ -582,7 +586,7 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
 
 /// An iterator over the entries of a `Map`.
 pub struct Iter<'a, K: 'a, V: 'a> {
-    iter: ordermap::Iter<'a, K, V>,
+    iter: indexmap::map::Iter<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for Iter<'a, K, V> {
@@ -623,7 +627,7 @@ impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {
 
 /// An mutable iterator over the entries of a `Map`.
 pub struct IterMut<'a, K: 'a, V: 'a> {
-    iter: ordermap::IterMut<'a, K, V>,
+    iter: indexmap::map::IterMut<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for IterMut<'a, K, V> {
@@ -664,7 +668,7 @@ impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {
 
 /// An owning iterator over the entries of a `Map`.
 pub struct IntoIter<K, V> {
-    iter: ordermap::IntoIter<K, V>,
+    iter: indexmap::map::IntoIter<K, V>,
 }
 
 impl<K, V> Iterator for IntoIter<K, V> {
@@ -705,7 +709,7 @@ impl<K, V> ExactSizeIterator for IntoIter<K, V> {
 
 /// An iterator over the keys of a `Map`.
 pub struct Keys<'a, K: 'a, V: 'a> {
-    iter: ordermap::Keys<'a, K, V>,
+    iter: indexmap::map::Keys<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for Keys<'a, K, V> {
@@ -746,7 +750,7 @@ impl<'a, K, V> ExactSizeIterator for Keys<'a, K, V> {
 
 /// An iterator over the values of a `Map`.
 pub struct Values<'a, K: 'a, V: 'a> {
-    iter: ordermap::Values<'a, K, V>,
+    iter: indexmap::map::Values<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for Values<'a, K, V> {
@@ -787,7 +791,7 @@ impl<'a, K, V> ExactSizeIterator for Values<'a, K, V> {
 
 /// A mutable iterator over the values of a `Map`.
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
-    iter: ordermap::ValuesMut<'a, K, V>,
+    iter: indexmap::map::ValuesMut<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {

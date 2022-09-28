@@ -11,28 +11,31 @@ mod error;
 
 use std::iter::FromIterator;
 
-use serde::de::DeserializeOwned;
-use serde::ser::Serialize;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use error::Error;
-use query::Query;
-use sealed::Sealed;
-use value::{Key, Map, Set, Value};
-use view::Render;
+use crate::{
+    error::Error,
+    query::Query,
+    sealed::Sealed,
+    value::{Key, Map, Set, Value},
+    view::Render,
+};
 
-pub use self::convert::*;
-pub use self::error::{ErrorObject, ErrorSource};
-pub use self::ident::Identifier;
-pub use self::link::Link;
-pub use self::object::{NewObject, Object};
-pub use self::relationship::Relationship;
-pub use self::specification::{JsonApi, Version};
+pub use self::{
+    convert::*,
+    error::{ErrorObject, ErrorSource},
+    ident::Identifier,
+    link::Link,
+    object::{NewObject, Object},
+    relationship::Relationship,
+    specification::{JsonApi, Version},
+};
 
 /// A marker trait used to indicate that a type can be the primary data for a
 /// document.
 pub trait PrimaryData: DeserializeOwned + Sealed + Serialize {
     #[doc(hidden)]
-    fn flatten(self, &Set<Object>) -> Value;
+    fn flatten(self, set: &Set<Object>) -> Value;
 }
 
 /// Represents a compound JSON API document.

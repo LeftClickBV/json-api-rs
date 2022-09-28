@@ -1,20 +1,20 @@
-use rocket::Rocket;
-use rocket::fairing::{Fairing, Info, Kind};
+use rocket::fairing::{Fairing, Info, Kind, Result};
+use rocket::{Build, Rocket};
 
-use error;
+use crate::error;
 
 pub struct JsonApiFairing;
 
+#[rocket::async_trait]
 impl Fairing for JsonApiFairing {
     fn info(&self) -> Info {
         Info {
-            kind: Kind::Attach,
+            kind: Kind::Ignite,
             name: "JsonApiFairing",
         }
     }
 
-    fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
-        let rocket = rocket.catch(error::catchers());
-        Ok(rocket)
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> Result {
+        Ok(rocket.register("/", error::catchers()))
     }
 }

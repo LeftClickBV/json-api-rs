@@ -2,14 +2,12 @@ use std::io::Cursor;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 
-use json_api::doc::Object;
-use json_api::{self, Error, Resource};
-use rocket::Outcome;
-use rocket::http::Status;
-use rocket::request::{FromRequest, Request};
-use rocket::response::{Responder, Response};
-
-use request::Query;
+use json_api::{self, doc::Object, Error, Resource};
+use rocket::{
+    http::Status,
+    request::Request,
+    response::{Responder, Response},
+};
 
 #[derive(Debug)]
 pub struct Collection<T: Resource>(pub Vec<T>);
@@ -46,11 +44,13 @@ impl<T: Resource> FromIterator<T> for Collection<T> {
     }
 }
 
-impl<T: Resource> Responder<'static> for Collection<T> {
-    fn respond_to(self, request: &Request) -> Result<Response<'static>, Status> {
-        let query = match Query::from_request(request) {
-            Outcome::Success(value) => Some(value.into_inner()),
-            Outcome::Failure(_) | Outcome::Forward(_) => None,
+impl<'r, T: Resource> Responder<'r, 'static> for Collection<T> {
+    fn respond_to(self, request: &'r Request<'_>) -> Result<Response<'static>, Status> {
+        let request_query = request.uri().query();
+        let query = match request_query.map(|query| json_api::query::from_str(query.as_str())) {
+            Some(Ok(query)) => Some(query),
+            Some(Err(_)) => None,
+            None => Some(Default::default()),
         };
 
         json_api::to_vec::<_, Object>(&*self, query.as_ref())
@@ -85,11 +85,13 @@ impl<T: Resource> DerefMut for Created<T> {
     }
 }
 
-impl<T: Resource> Responder<'static> for Created<T> {
+impl<'r, T: Resource> Responder<'r, 'static> for Created<T> {
     fn respond_to(self, request: &Request) -> Result<Response<'static>, Status> {
-        let query = match Query::from_request(request) {
-            Outcome::Success(value) => Some(value.into_inner()),
-            Outcome::Failure(_) | Outcome::Forward(_) => None,
+        let request_query = request.uri().query();
+        let query = match request_query.map(|query| json_api::query::from_str(query.as_str())) {
+            Some(Ok(query)) => Some(query),
+            Some(Err(_)) => None,
+            None => Some(Default::default()),
         };
 
         json_api::to_vec::<_, Object>(&*self, query.as_ref())
@@ -128,11 +130,13 @@ impl<T: Resource> DerefMut for Member<T> {
     }
 }
 
-impl<T: Resource> Responder<'static> for Member<T> {
+impl<'r, T: Resource> Responder<'r, 'static> for Member<T> {
     fn respond_to(self, request: &Request) -> Result<Response<'static>, Status> {
-        let query = match Query::from_request(request) {
-            Outcome::Success(value) => Some(value.into_inner()),
-            Outcome::Failure(_) | Outcome::Forward(_) => None,
+        let request_query = request.uri().query();
+        let query = match request_query.map(|query| json_api::query::from_str(query.as_str())) {
+            Some(Ok(query)) => Some(query),
+            Some(Err(_)) => None,
+            None => Some(Default::default()),
         };
 
         json_api::to_vec::<_, Object>(&*self, query.as_ref())
@@ -144,17 +148,16 @@ impl<T: Resource> Responder<'static> for Member<T> {
 pub(crate) fn with_body(body: Vec<u8>) -> Response<'static> {
     Response::build()
         .raw_header("Content-Type", "application/vnd.api+json")
-        .sized_body(Cursor::new(body))
+        .sized_body(None, Cursor::new(body))
         .finalize()
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-pub(crate) fn fail(e: Error) -> Result<Response<'static>, Status> {
-    use config::ROCKET_ENV;
-
-    if !ROCKET_ENV.is_prod() {
-        eprintln!("{:?}", e);
-    }
+pub(crate) fn fail(_e: Error) -> Result<Response<'static>, Status> {
+    // use config::ROCKET_ENV;
+    //
+    // if !ROCKET_ENV.is_prod() {
+    //     eprintln!("{:?}", e);
+    // }
 
     Err(Status::InternalServerError)
 }
